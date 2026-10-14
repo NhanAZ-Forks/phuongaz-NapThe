@@ -1,54 +1,69 @@
 <?php
 
+declare(strict_types=1);
+
 namespace phuongaz\NapThe\card;
 
-use phuongaz\NapThe\Loader;
+use InvalidArgumentException;
 
-Class Card{
-
-	private array $data;
-
-	public function __construct(array $data){
-		$this->data = $data;
+final class Card{
+	public function __construct(
+		private readonly string $requestId,
+		private readonly string $playerName,
+		private readonly string $playerUuid,
+		private readonly string $telco,
+		private readonly int $amount,
+		private readonly string $serial,
+		private readonly string $code,
+		private readonly string $partnerId,
+		private readonly string $partnerKey,
+	){
+		if(preg_match('/^[A-Za-z0-9_-]{16,80}$/D', $requestId) !== 1){
+			throw new InvalidArgumentException("Invalid payment request ID");
+		}
+		if(preg_match('/^[A-Za-z0-9_]{1,16}$/D', $playerName) !== 1){
+			throw new InvalidArgumentException("Invalid player name");
+		}
+		if($amount < 1 || $serial === "" || $code === "" || $telco === ""){
+			throw new InvalidArgumentException("Invalid card details");
+		}
 	}
 
-    public function getChargeUrl(): string
-    {   
-        return 'http://'.Loader::getDriver().'/chargingws/v2?';
-    }
+	public function getRequestId() : string{
+		return $this->requestId;
+	}
 
-    public function createDataPost(string $command) :string {
-    	$dataPost = [];
-        $dataPost['request_id'] = $this->data['request_id'];
-        $dataPost['code'] = $this->data['code'];
-        $dataPost['partner_id'] = $this->data['partner_id'];
-        $dataPost['serial'] = $this->data['serial'];
-        $dataPost['telco'] = $this->data['telco'];
-        $dataPost['command'] = $command;  
-        $dataPost['amount'] = $this->data['amount'];
-        $dataPost['sign'] = $this->getSign();
-        return http_build_query($dataPost);
-    }
+	public function getPlayerName() : string{
+		return $this->playerName;
+	}
 
-    public function getTelco() :string{
-    	return $this->data['telco'];
-    }
+	public function getPlayerUuid() : string{
+		return $this->playerUuid;
+	}
 
-    public function getAmount() :int{
-    	return $this->data['amount'];
-    }
+	public function getTelco() : string{
+		return $this->telco;
+	}
 
-    public function getSign(): string{
-        $data = [];
-        $data[] = $this->data['partner_key'];
-        $data[] = $this->data['code']; 
-        $data[] = $this->data['serial'];
-        ksort($data);
-        $sign = "";
-        foreach ($data as $item) {
-            $sign .= $item;
-        }
-        return md5($sign);
-    }
+	public function getAmount() : int{
+		return $this->amount;
+	}
 
+	/**
+	 * Raw PIN, serial, partner ID and partner key are intentionally never persisted or logged.
+	 *
+	 * @return array<string, int|string>
+	 */
+	public function getRequestData(string $command) : array{
+		return Gateway::buildPayload(
+			$command,
+			$this->requestId,
+			$this->telco,
+			$this->amount,
+			$this->serial,
+			$this->code,
+			$this->partnerId,
+			$this->partnerKey,
+		);
+	}
 }

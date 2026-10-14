@@ -1,70 +1,60 @@
 <?php
 
+declare(strict_types=1);
+
 namespace phuongaz\NapThe\card;
 
-Class Result{
-
-	private Card $card;
-	private ?array $result;
-
-	public function __construct(Card $card, ?array $result){
-		$this->card = $card;
-		$this->result = $result;
+final class Result{
+	private function __construct(
+		private readonly string $requestId,
+		private readonly int $status,
+	){
 	}
 
-	public function checkError() :bool{
-		return is_null($this->result);
+	public static function fromResponse(string $body, int $httpStatus, string $expectedRequestId) : ?self{
+		if($httpStatus < 200 || $httpStatus >= 300){
+			return null;
+		}
+		try{
+			$data = json_decode($body, true, 16, JSON_THROW_ON_ERROR);
+		}catch(\JsonException){
+			return null;
+		}
+		if(!is_array($data) || !isset($data["request_id"], $data["status"]) || !is_string($data["request_id"]) || $data["request_id"] !== $expectedRequestId){
+			return null;
+		}
+		$status = filter_var($data["status"], FILTER_VALIDATE_INT);
+		if(!is_int($status)){
+			return null;
+		}
+		return new self($data["request_id"], $status);
 	}
 
-	public function getCard() :Card{
-		return $this->card;
+	public function getRequestId() : string{
+		return $this->requestId;
 	}
 
-	public function getResult() :array{
-		return $this->result;
+	public function getStatus() : int{
+		return $this->status;
 	}
 
-	public function getRequestId() :string{
-		return $this->getResult()['request_id'];
+	public function isSuccessful() : bool{
+		return $this->status === 1;
 	}
 
-	public function getStatus() :int{
-		return $this->getResult()['status'];
+	public function isPending() : bool{
+		return $this->status === 99;
 	}
 
-	public function getMessage():string{
-		return $this->getResult()['message'];
+	public function getSafeMessage() : string{
+		return match($this->status){
+			1 => "Card accepted by the provider",
+			2 => "The provider reported a denomination mismatch",
+			3 => "The provider rejected the card",
+			4 => "The provider is temporarily unavailable",
+			99 => "The provider is still processing this request",
+			100 => "The provider rejected the request",
+			default => "The provider returned an unknown status",
+		};
 	}
-
-	public function isPending() :bool{
-		return ($this->getStatus() == 99);
-	}
-
-    public function mapStatustoString() :string{
-    	$data = $this->getStatus();
-    	switch($data){
-    		case 1:
-    			$status = 'Thẻ thành công đúng mệnh giá';
-    			break;
-    		case 2:
-    			$status = 'Thẻ thành công sai mệnh giá';
-    			break;
-    		case 3:
-    			$status = 'Thẻ lỗi';
-    			break;
-    		case 4:
-    			$status = 'Hệ thống bảo trì';
-    			break;
-    		case 99:
-    			$status = 'Thẻ chờ xử lý vui lòng chờ khoảng 10 giây';
-    			break;
-    		case 100:
-    			$status = 'Gửi thẻ thất bại'." | Lỗi:§e ".$this->getMessage();
-    			break;
-    		default:
-				$status = 'UNKNOWN';
-				break;
-    	}
-    	return $status;
-    }
 }

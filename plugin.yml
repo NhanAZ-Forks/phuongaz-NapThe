@@ -1,5 +1,17 @@
 name: NapThe
 author: phuongaz
 main: phuongaz\NapThe\Loader
-api: 3.21.0
-version: 0.1
+api: 5.0.0
+version: 0.2.0
+load: POSTWORLD
+
+commands:
+  napthe:
+    description: Submit a prepaid card to the configured payment provider
+    usage: /napthe
+    permission: napthe.command
+
+permissions:
+  napthe.command:
+    description: Allows a player to open the prepaid card form
+    default: true
