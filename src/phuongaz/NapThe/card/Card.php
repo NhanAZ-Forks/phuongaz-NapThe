@@ -66,4 +66,8 @@ final class Card{
 			$this->partnerKey,
 		);
 	}
+
+	public function getExpectedResponseSignature() : string{
+		return Gateway::responseSignature($this->partnerKey, $this->code, $this->serial);
+	}
 }

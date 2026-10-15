@@ -14,11 +14,11 @@ final class NapTheForm implements Form, JsonSerializable{
 	/** @var list<array{label: string, code: string}> */
 	private const TELCOS = [
 		["label" => "Viettel", "code" => "VIETTEL"],
-		["label" => "Vietnamobile", "code" => "VIETNAMMOBILE"],
 		["label" => "Vinaphone", "code" => "VINAPHONE"],
 		["label" => "Mobifone", "code" => "MOBIFONE"],
+		["label" => "Garena", "code" => "GARENA"],
 		["label" => "Zing", "code" => "ZING"],
-		["label" => "Gate", "code" => "GATE"],
+		["label" => "Vcoin", "code" => "VCOIN"],
 	];
 
 	/** @var list<int> */

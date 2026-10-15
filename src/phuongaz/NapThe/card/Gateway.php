@@ -5,6 +5,9 @@ declare(strict_types=1);
 namespace phuongaz\NapThe\card;
 
 final class Gateway{
+	/** @var list<string> */
+	private const TELCOS = ["VIETTEL", "VINAPHONE", "MOBIFONE", "GARENA", "ZING", "VCOIN"];
+
 	/**
 	 * Convert the historical hostname setting into the HTTPS v2 endpoint.
 	 * Schemes, credentials, custom ports, paths, queries and fragments are rejected.
@@ -26,8 +29,29 @@ final class Gateway{
 		return "https://" . $host . "/chargingws/v2";
 	}
 
-	public static function signature(string $partnerKey, string $code, string $serial) : string{
-		// This preserves the historical gateway contract used by this plugin and the NhanAZ NapThe integration.
+	public static function supportsTelco(string $telco) : bool{
+		return in_array($telco, self::TELCOS, true);
+	}
+
+	public static function requestSignature(
+		string $partnerKey,
+		string $command,
+		string $partnerId,
+		string $requestId,
+		string $code,
+		string $serial,
+		string $telco,
+	) : string{
+		if($command === "charging"){
+			return md5($partnerKey . $code . $command . $partnerId . $requestId . $serial . $telco);
+		}
+		if($command === "check"){
+			return md5($partnerKey . $command . $partnerId . $requestId);
+		}
+		throw new \InvalidArgumentException("Unsupported card gateway command");
+	}
+
+	public static function responseSignature(string $partnerKey, string $code, string $serial) : string{
 		return md5($partnerKey . $code . $serial);
 	}
 
@@ -46,15 +70,18 @@ final class Gateway{
 			throw new \InvalidArgumentException("Unsupported card gateway command");
 		}
 
-		return [
-			"request_id" => $requestId,
-			"code" => $code,
-			"partner_id" => $partnerId,
-			"serial" => $serial,
-			"telco" => $telco,
-			"amount" => $amount,
+		$payload = [
 			"command" => $command,
-			"sign" => self::signature($partnerKey, $code, $serial),
+			"partner_id" => $partnerId,
+			"request_id" => $requestId,
 		];
+		if($command === "charging"){
+			$payload["telco"] = $telco;
+			$payload["amount"] = $amount;
+			$payload["serial"] = $serial;
+			$payload["code"] = $code;
+		}
+		$payload["sign"] = self::requestSignature($partnerKey, $command, $partnerId, $requestId, $code, $serial, $telco);
+		return $payload;
 	}
 }

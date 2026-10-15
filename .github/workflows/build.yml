@@ -94,7 +94,7 @@ jobs:
           enabled=0
           ready=0
           for _ in $(seq 1 90); do
-            if grep -Fq 'Enabling NapThe v0.2.0' "$runtime/server.log"; then enabled=1; fi
+            if grep -Fq 'Enabling NapThe v0.2.1' "$runtime/server.log"; then enabled=1; fi
             if grep -Fq 'Done (' "$runtime/server.log"; then ready=1; break; fi
             if ! kill -0 "$server_pid" 2>/dev/null; then cat "$runtime/server.log"; exit 1; fi
             sleep 1

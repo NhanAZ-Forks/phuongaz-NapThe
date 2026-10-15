@@ -1,6 +1,6 @@
 # NapThe
 
-NapThe is a PocketMine plugin for submitting prepaid cards through a configured `/chargingws/v2` provider. The manifest declares Axolotl-PM API 5.0.0 as its minimum; CI currently checks API 5.0.0 and 5.49.1 source pins, not every 5.x release. The original author credit to phuongaz is retained.
+NapThe is a prepaid-card plugin for Axolotl-PM. It uses The9P's documented `/chargingws/v2` endpoint by default; the original author credit to phuongaz is retained. The manifest minimum is API 5.0.0. CI checks pinned API 5.0.0 and 5.49.1 source revisions, not every 5.x release.
 
 ## Use
 
@@ -9,7 +9,7 @@ NapThe is a PocketMine plugin for submitting prepaid cards through a configured 
 - Only a matching provider response with status `1` can start the configured reward commands. Status `99` is checked up to six times at ten-second intervals.
 - A confirmed reward for an offline player is held in `transactions.yml` and processed when the player rejoins.
 
-Configure `partner_id`, `partner_key`, `driver`, `ratio`, `bonus`, and `commands` in the server's plugin data `setting.yml`. `driver` must be a hostname only; the plugin constructs `https://<driver>/chargingws/v2`. Requests use TLS verification and do not follow redirects. The signing rule and form-encoded request preserve this source's historical gateway contract. The provider's authenticated merchant contract and any live payment transaction have not been verified in this migration.
+Configure `partner_id`, `partner_key`, `driver`, `ratio`, `bonus`, and `commands` in the server's plugin data `setting.yml`. The default host is `www.the9p.com`; `driver` must be a hostname only, and the plugin constructs `https://<driver>/chargingws/v2`. Requests use TLS verification and do not follow redirects. The charging and status-check signatures follow [The9P's official API documentation](https://www.the9p.com/tai-lieu-api), and provider responses must include a matching request ID and valid `callback_sign`. A custom host must implement the same documented contract before use. Existing server settings are preserved, so verify the configured host and merchant account before enabling payment submissions.
 
 ## Payment and data handling
 
@@ -21,6 +21,6 @@ If an old server has `offline.yml`, valid pending reward records are imported in
 
 ## Verification limits
 
-Offline fixtures cover request signing and fields, HTTPS host construction, response request-ID matching, pending/failure statuses, and reward calculation/command validation. The response fixtures are synthetic; no credential or card transaction is used. CI checks PHPStan max against pinned Axolotl-PM API 5.0.0 and 5.49.1 sources, builds and inspects the PHAR, then performs a server startup smoke test. A connected-client form interaction is not verified.
+Offline fixtures cover charging and check signatures, request fields, supported card networks, HTTPS host construction, callback-signature validation, response request-ID matching, pending/failure statuses, and reward calculation/command validation. The response fixtures are synthetic; no credential or card transaction is used. CI checks PHPStan max against pinned Axolotl-PM API 5.0.0 and 5.49.1 sources, builds and inspects the PHAR, then performs a server startup smoke test. A connected-client form interaction and live payment are not verified.
 
-The repository has no root license file or separate redistribution grant recorded. No stable release asset is published.
+The repository has no root license file. Do not treat the absence of a license file as permission to reuse the source. No real payment credential or transaction is included in this repository or its tests.

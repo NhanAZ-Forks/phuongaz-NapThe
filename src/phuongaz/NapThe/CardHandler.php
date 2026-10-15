@@ -74,7 +74,7 @@ final class CardHandler extends Task{
 			curl_multi_remove_handle($this->multiHandle, $handle);
 			curl_close($handle);
 
-			$result = $successfulTransfer ? Result::fromResponse($body, $httpStatus, $requestId) : null;
+			$result = $successfulTransfer ? Result::fromResponse($body, $httpStatus, $requestId, $request["card"]->getExpectedResponseSignature()) : null;
 			$this->handleResult($request["card"], $request["command"], $request["checks"], $result);
 		}
 

@@ -31,7 +31,7 @@ final class Loader extends PluginBase implements Listener{
 		$this->saveResource("setting.yml");
 		$this->settings = new Config($this->getDataFolder() . "setting.yml", Config::YAML);
 		$this->settings->setDefaults([
-			"driver" => "thesieure.com",
+			"driver" => "www.the9p.com",
 			"partner_key" => "",
 			"partner_id" => "",
 			"ratio" => 1000,
@@ -98,7 +98,7 @@ final class Loader extends PluginBase implements Listener{
 			$player->sendMessage(TextFormat::RED . "The configured payment provider must be a valid HTTPS hostname.");
 			return;
 		}
-		if(!in_array($telco, ["VIETTEL", "VIETNAMMOBILE", "VINAPHONE", "MOBIFONE", "ZING", "GATE"], true) || !in_array($amount, [10000, 20000, 50000, 100000, 200000, 500000], true) || preg_match('/^[0-9]{5,40}$/D', $serial) !== 1 || preg_match('/^[0-9]{5,40}$/D', $code) !== 1){
+		if(!Gateway::supportsTelco($telco) || !in_array($amount, [10000, 20000, 50000, 100000, 200000, 500000], true) || preg_match('/^[0-9]{5,40}$/D', $serial) !== 1 || preg_match('/^[0-9]{5,40}$/D', $code) !== 1){
 			$player->sendMessage(TextFormat::RED . "The card details are invalid. Check the selected value, serial and PIN.");
 			return;
 		}

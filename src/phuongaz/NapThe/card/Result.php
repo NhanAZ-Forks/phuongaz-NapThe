@@ -11,7 +11,7 @@ final class Result{
 	){
 	}
 
-	public static function fromResponse(string $body, int $httpStatus, string $expectedRequestId) : ?self{
+	public static function fromResponse(string $body, int $httpStatus, string $expectedRequestId, string $expectedCallbackSignature) : ?self{
 		if($httpStatus < 200 || $httpStatus >= 300){
 			return null;
 		}
@@ -20,7 +20,15 @@ final class Result{
 		}catch(\JsonException){
 			return null;
 		}
-		if(!is_array($data) || !isset($data["request_id"], $data["status"]) || !is_string($data["request_id"]) || $data["request_id"] !== $expectedRequestId){
+		if(
+			!is_array($data) ||
+			!isset($data["request_id"], $data["status"], $data["callback_sign"]) ||
+			!is_string($data["request_id"]) ||
+			$data["request_id"] !== $expectedRequestId ||
+			!is_string($data["callback_sign"]) ||
+			preg_match('/^[a-fA-F0-9]{32}$/D', $data["callback_sign"]) !== 1 ||
+			!hash_equals($expectedCallbackSignature, strtolower($data["callback_sign"]))
+		){
 			return null;
 		}
 		$status = filter_var($data["status"], FILTER_VALIDATE_INT);
